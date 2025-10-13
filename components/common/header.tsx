@@ -15,14 +15,14 @@ export default function Header() {
         </div>
 
         <div className="flex lg:justify-center gap-4 lg:gap-12 lg:items-center">
-            <NavLink href="/#pricing">Pricing</NavLink>
-            {isLoggedIn && <NavLink href="/dashboard">Your Summaries</NavLink>}
+            <NavLink href="/#harga">Harga</NavLink>
+            {isLoggedIn && <NavLink href="/dashboard">Rangkuman mu</NavLink>}
         </div>
 
         <div className="flex lg:justify-end lg:flex-1">
             {isLoggedIn ? (
                  <div className="flex gap-2 items-center">
-                    <NavLink href="/upload">Upload a PDF</NavLink>
+                    <NavLink href="/upload">Upload PDF</NavLink>
                     <div>Pro</div>
                     <Button>User</Button>
                 </div>
