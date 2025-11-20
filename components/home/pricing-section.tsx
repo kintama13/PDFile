@@ -48,7 +48,7 @@ const PricingCard = ({
         <div
             className={cn(
                 "relative flex flex-col h-full gap-4 lg:gap-8 z-10 p-8 border-[1px] border-gray-500/20 rounded-2xl",
-                id === 'pro' && "border-rose-500 gap-5 border-2"
+                id === 'dasar' && "border-rose-500 gap-5 border-2"
             )}
         >
             <div>
