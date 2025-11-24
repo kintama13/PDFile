@@ -4,7 +4,7 @@ import z, { promise } from "zod";
 import UploadFormInput from "./upload-form-input";
 import { useUploadThing } from "@/utils/uploadthing";
 import { toast } from "sonner";
-import { generatePdfSummary } from "@/actions/upload-actions";
+import { generatePdfSummary, storePdfSummaryAction } from "@/actions/upload-actions";
 import { useRef, useState } from "react";
 
 
@@ -50,6 +50,8 @@ export default function UploadForm() {
             // validasi file
             const validatedFields = schema.safeParse({file})
 
+            console.log(validatedFields)
+
             if (!validatedFields.success) {
                 toast.error(validatedFields.error.flatten().fieldErrors.file?.[0] ?? 'File invalid')
                 setIsLoading(false)
@@ -75,10 +77,20 @@ export default function UploadForm() {
             const {data = null, message = null} = result || {}
 
             if (data) {
+                let storeResult: any
                 toast.info("Menyimpan PDF....")
-                formRef.current?.reset()
+                
                 if(data.summary){
-                    // simpan rangkuman di dalam database
+                  storeResult = await storePdfSummaryAction({
+                    summary: data.summary,
+                    fileUrl: resp[0].serverData.file.url,
+                    title: data.title,
+                    fileName: file.name
+                  })
+
+                  toast.info("Rangkuman Dibuat")
+
+                  formRef.current?.reset()
                 }
             }
        

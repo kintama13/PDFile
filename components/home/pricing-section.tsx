@@ -16,16 +16,17 @@ const plans: PriceType[] = [
   {
     name: "Dasar",
     description: "Cocok untuk penggunaan ringan dan kebutuhan dasar.",
-    items: ["Unggah hingga 2 file PDF per hari", "Bantuan melalui email"],
+    items: ["Unggah hingga 2 file PDF per hari", "Bantuan melalui email","Dapat Menyimpan Maksimal 2 File"],
     id: "dasar",
   },
   {
     name: "Pro",
-    price: 150,
+    price: 50,
     description: "Dirancang untuk profesional dan tim yang memerlukan fitur penuh.",
     items: [
       "Unggah tanpa batas jumlah file",
       "Prioritas pemrosesan server",
+      "Dapat Menyimpan Hasil Rangkuman Seabanyak-banyaknya",
       "Dukungan pelanggan premium",
     ],
     id: "pro",

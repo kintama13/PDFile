@@ -1,8 +1,15 @@
 'use server'
 
-import { generateSummaryFromGemini } from "@/lib/geminiai";
+import {generateSummaryFromMetaLlamaAI } from "@/lib/metallamaai";
 import { fetchAndExtractPdfText } from "@/lib/langchain";
-import { generateSummaryFromOpenAI } from "@/lib/openai";
+import { generateSummaryFromGroxAI } from "@/lib/groxai";
+import { auth } from "@clerk/nextjs/server";
+import { getDbConnection } from "@/lib/db";
+import { formatFileNameAsTitle } from "@/utils/format-utils";
+
+interface PdfSummaryType {
+    userId?: string, fileUrl: string, summary: string, title :string, fileName: string 
+}
 
 export async function generatePdfSummary(uploadResponse: [{
     serverData: {
@@ -41,35 +48,42 @@ export async function generatePdfSummary(uploadResponse: [{
         console.log({pdfText})
 
         let summary
-        try{
-            summary = await generateSummaryFromOpenAI(pdfText)
+        try {
+            summary = await generateSummaryFromMetaLlamaAI(pdfText)
             console.log({summary})
-        }catch(error){
-            console.log(error)
-            // memanggil gemini
-            if(error instanceof Error && error.message === 'RATE_LIMIT_EXCEEDED') {
-                try{
-                    summary = await generateSummaryFromGemini(pdfText)
-                }catch(geminiError){
-                    console.error('API Gemini Gagal Setelah Quota Open AI Habis', geminiError)
-                    throw new Error('Gagal membuat Rangkuman Menggunakan AI Yang Tersedia')
+        } catch (error) {
+            console.log({error})
+            if (error instanceof Error && error.message === 'RATE_LIMIT_EXCEEDED') {
+                try {
+                    summary = await generateSummaryFromGroxAI(pdfText)
+                } catch (groxError) {
+                    console.error(
+                        'API Grox gagal setelah quota Meta-Llama sudah melebihi batas',
+                        groxError
+                    )
+                    throw new Error(
+                        'Gagal membuat rangkuman dari beberapa ai yang digunakan'
+                    )
                 }
             }
         }
 
-        if(!summary) {
+        if (!summary) {
             return {
                 success: false,
-                message: 'Gagal Membuat Rangkuman',
+                message: 'tidak dapat membuat rangkuman',
                 data: null
             }
         }
 
-        return {
+        const formatedFileName = formatFileNameAsTitle(fileName)
+
+        return{
             success: true,
-            message: 'Rangkuman Telah Dibuat',
+            message: 'Rangkuman Berhasil Dibuat',
             data: {
-                summary,
+                title: fileName,
+                summary
             }
         }
     } catch(err) {
@@ -77,6 +91,74 @@ export async function generatePdfSummary(uploadResponse: [{
             success: false,
             message: 'Upload File Gagal',
             data: null
+        }
+    }
+}
+
+async function savePdfSummary({userId, fileUrl, summary, title, fileName}: PdfSummaryType) {
+    try {
+        const sql = await getDbConnection()
+        await sql`INSERT INTO pdf_summaries (
+            user_id,
+            original_file_url,
+            summary_text,
+            title,
+            file_name
+        ) VALUES (
+            ${userId},
+            ${fileUrl},
+            ${summary},
+            ${title},
+            ${fileName}
+        )`
+
+        return true  // FIX
+
+    } catch (error) {
+        console.error('Gagal menyimpan rangkuman PDF', error)
+        throw error
+    }
+}
+
+export async function storePdfSummaryAction({
+    fileUrl,
+    summary,
+    title,
+    fileName,
+}: PdfSummaryType) {
+
+    let savedSummary: any
+    try {
+        const {userId} = await auth()
+        if (!userId) {
+            return{
+                success: false,
+                message: 'User tidak ditemukan'
+            }
+        }
+        savedSummary = await savePdfSummary({
+            userId,
+            fileUrl,
+            summary,
+            title,
+            fileName
+        })
+
+        if (!savedSummary) {
+            return{
+                success: false,
+                message: 'Gagal menyimpan rangkuman PDF, tolong coba lagi'
+            }
+        }
+
+        return {
+            success: true,
+            message: 'Rangkuman PDF Tersimpan'
+        }
+    } catch (error) {
+        return {
+            success: false,
+            message: error instanceof Error ? error.message : 'Gagal menyinmpan rangkuman PDF'
         }
     }
 }
