@@ -1,11 +1,12 @@
 'use client'
 // schema dangan zod
-import z, { promise } from "zod";
+import z from "zod";
 import UploadFormInput from "./upload-form-input";
 import { useUploadThing } from "@/utils/uploadthing";
 import { toast } from "sonner";
 import { generatePdfSummary, storePdfSummaryAction } from "@/actions/upload-actions";
 import { useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 
 
 const schema = z.object({
@@ -24,6 +25,7 @@ const schema = z.object({
 export default function UploadForm() {
     const formRef = useRef<HTMLFormElement>(null)
     const [isLoading, setIsLoading] = useState(false)
+    const router = useRouter()
 
     const {startUpload, routeConfig} = useUploadThing
     ('pdfUploader', {
@@ -79,27 +81,28 @@ export default function UploadForm() {
             if (data) {
                 let storeResult: any
                 toast.info("Menyimpan PDF....")
-                
                 if(data.summary){
-                  storeResult = await storePdfSummaryAction({
-                    summary: data.summary,
-                    fileUrl: resp[0].serverData.file.url,
-                    title: data.title,
-                    fileName: file.name
-                  })
+                    storeResult = await storePdfSummaryAction({
+                        fileUrl: resp[0].serverData.file.url,
+                        summary: data.summary,
+                        title: data.title,
+                        fileName: file.name
+                    })
 
-                  toast.info("Rangkuman Dibuat")
-
-                  formRef.current?.reset()
+                    toast.info('Rangkuman sudah dibuat')
                 }
+
+                formRef.current?.reset()
+                router.push(`/summaries/${storeResult.data.id}`)
             }
        
         }catch(error){
             setIsLoading(false)
             console.error('telah terjadi error', error)
             formRef.current?.reset()
+        }finally{
+            setIsLoading(false)
         }
-        // kembali ke halaman rangkuman [id]
     }
     return (
         <div className="flex flex-col gap-8 w-full max-w-2xl mx-auto">

@@ -3,12 +3,17 @@
 import {generateSummaryFromMetaLlamaAI } from "@/lib/metallamaai";
 import { fetchAndExtractPdfText } from "@/lib/langchain";
 import { generateSummaryFromGroxAI } from "@/lib/groxai";
+import { formatFileNameAsTitle } from "@/utils/format-utils";
 import { auth } from "@clerk/nextjs/server";
 import { getDbConnection } from "@/lib/db";
-import { formatFileNameAsTitle } from "@/utils/format-utils";
+import { revalidatePath } from "next/cache";
 
 interface PdfSummaryType {
-    userId?: string, fileUrl: string, summary: string, title :string, fileName: string 
+    userId?:string, 
+    fileUrl:string, 
+    summary:string, 
+    title:string, 
+    fileName:string
 }
 
 export async function generatePdfSummary(uploadResponse: [{
@@ -95,27 +100,26 @@ export async function generatePdfSummary(uploadResponse: [{
     }
 }
 
-async function savePdfSummary({userId, fileUrl, summary, title, fileName}: PdfSummaryType) {
+async function savePdfSummary({userId,fileUrl,summary,title,fileName}:PdfSummaryType) {
+    // sql memasukkan rangkuman PDF
     try {
         const sql = await getDbConnection()
-        await sql`INSERT INTO pdf_summaries (
-            user_id,
-            original_file_url,
-            summary_text,
-            title,
-            file_name
+        const [savedSummary] = await sql`INSERT INTO pdf_summaries (
+        user_id,
+        original_file_url,
+        summary_text,
+        title,
+        file_name
         ) VALUES (
-            ${userId},
-            ${fileUrl},
-            ${summary},
-            ${title},
-            ${fileName}
-        )`
-
-        return true  // FIX
-
+        ${userId},
+        ${fileUrl},
+        ${summary},
+        ${title},
+        ${fileName}
+        ) RETURNING id, summary_text;`
+         return savedSummary
     } catch (error) {
-        console.error('Gagal menyimpan rangkuman PDF', error)
+        console.error('error menyimpan rangkuman PDF', error)
         throw error
     }
 }
@@ -124,14 +128,17 @@ export async function storePdfSummaryAction({
     fileUrl,
     summary,
     title,
-    fileName,
+    fileName
 }: PdfSummaryType) {
+    // user sudah login dan memiliki userId
+    // simpan rangkuman pdf
+    // savePdfSummary()
 
     let savedSummary: any
     try {
-        const {userId} = await auth()
+        const { userId } = await auth()
         if (!userId) {
-            return{
+            return {
                 success: false,
                 message: 'User tidak ditemukan'
             }
@@ -147,18 +154,25 @@ export async function storePdfSummaryAction({
         if (!savedSummary) {
             return{
                 success: false,
-                message: 'Gagal menyimpan rangkuman PDF, tolong coba lagi'
+                message: 'Gagal menyimpan rangkuman PDF, tolong coba lagi.....'
             }
         }
 
-        return {
-            success: true,
-            message: 'Rangkuman PDF Tersimpan'
-        }
     } catch (error) {
         return {
             success: false,
-            message: error instanceof Error ? error.message : 'Gagal menyinmpan rangkuman PDF'
+            message: error instanceof Error ? error.message : 'Error menyimpan rangkuman PDF'
+        }
+    }
+
+    // validasi ulang cache
+    revalidatePath(`/summaries/${savedSummary.id}`)
+
+    return {
+        success: true,
+        message: 'Rangkuman PDF berhasil disimpan',
+        data: {
+            id: savedSummary.id
         }
     }
 }
