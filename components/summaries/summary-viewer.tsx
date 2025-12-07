@@ -3,19 +3,6 @@
 import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { parseSection } from "@/utils/summary-helpers";
-import ContentSection from "./content-section";
-
-const SectionTitle = ({title}: {title: string}) => {
-    return(
-        <div className="flex flex-col gap-2 mb-6 sticky top-0 pt-2 pb-4
-        bg-background/80 backdrop-blur-xs z-10">
-            <h2 className="text-3xl lg:text-4xl font-bold text-center
-            flex items-center justify-center gap-2">
-                {title}
-            </h2>
-        </div>
-    )
-}
 
 export function SummaryViewer({ summary }: { summary: string }) {
   const [currentSection, setCurrentSection] = useState(0);
@@ -26,20 +13,55 @@ export function SummaryViewer({ summary }: { summary: string }) {
     .filter(Boolean)
     .map(parseSection);
 
+  const current = sections[currentSection];
+
   return (
-    <Card className="relative px-2 h-[500px] sm:h-[600px] lg:h-[700px] w-full
-    xl:w-[600px] overflow-hidden bg-linear-to-br from-background via-background/95
-    to-rose-500/5 backdrop-blur-lg shadow-2xl rounded-3xl border border-rose-500/10"
-    >
-        <div className="h-full overflow-y-auto scrollbar-hide pt-12 sm:pt-16 pb-20 sm:pb-24">
-            <div className="px-4 sm:px-6">
-                <SectionTitle title={sections[currentSection]?.title || ''}/>
-                <ContentSection
-                    title={sections[currentSection]?.title || ''}
-                    points={sections[currentSection]?.points || []}
-                />
-            </div>
+    <Card className="p-6 h-[500px] w-full max-w-xl mx-auto">
+      
+      {/* Judul */}
+      <h2 className="text-xl font-bold text-center mb-6">
+        {current?.title || 'Judul'}
+      </h2>
+
+      {/* Konten */}
+      <div className="h-[calc(100%-60px)] overflow-y-auto">
+        {current?.points && current.points.length > 0 ? (
+          <div className="space-y-3">
+            {current.points.map((point, index) => (
+              <p key={index} className="text-gray-700">
+                {point}
+              </p>
+            ))}
+          </div>
+        ) : (
+          <p className="text-gray-500 text-center">Tidak ada konten</p>
+        )}
+      </div>
+
+      {/* Navigasi Sederhana */}
+      {sections.length > 1 && (
+        <div className="flex items-center justify-center gap-3 mt-4">
+          <button
+            onClick={() => setCurrentSection(p => Math.max(0, p - 1))}
+            className="px-3 py-1 text-sm border rounded"
+            disabled={currentSection === 0}
+          >
+            Sebelumnya
+          </button>
+          
+          <span className="text-sm">
+            {currentSection + 1} dari {sections.length}
+          </span>
+          
+          <button
+            onClick={() => setCurrentSection(p => Math.min(sections.length - 1, p + 1))}
+            className="px-3 py-1 text-sm border rounded"
+            disabled={currentSection === sections.length - 1}
+          >
+            Selanjutnya
+          </button>
         </div>
+      )}
     </Card>
   );
 }
