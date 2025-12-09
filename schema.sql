@@ -8,7 +8,7 @@ CREATE TABLE users(
   full_name VARCHAR(255),
   customer_id VARCHAR(255) UNIQUE,
   price_id VARCHAR(255),
-  status VARCHAR(50) DEFAULT 'Gratis'
+  status VARCHAR(50) DEFAULT 'tidak aktif'
 );
 
 CREATE TABLE pdf_summaries(

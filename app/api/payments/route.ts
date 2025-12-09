@@ -41,7 +41,7 @@ export const POST = async (req: NextRequest) => {
         }
     } catch (err) {
         console.log(err)
-        return NextResponse.json({error: 'Failed to trogger webhook', err}, {status: 400})
+        return NextResponse.json({error: 'Failed to trigger webhook', err}, {status: 400})
     }
 
     return NextResponse.json({

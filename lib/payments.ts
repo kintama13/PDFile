@@ -8,7 +8,7 @@ export async function handleSubscriptionDeleted({
     subscriptionId: string
     stripe: Stripe
 }) {
-    console.log('Subsciprion dihapus',subscriptionId)
+    console.log('Subscription dihapus',subscriptionId)
 
     try {
         const subscription = await stripe.subscriptions.retrieve(subscriptionId)
@@ -16,7 +16,7 @@ export async function handleSubscriptionDeleted({
         const sql = await getDbConnection()
 
         await sql `
-        UPDATE users SET status = 'Gratis' WHERE customer_id = ${subscription.customer}
+        UPDATE users SET status = 'dibatalkan' WHERE customer_id = ${subscription.customer}
         `
 
         console.log('Subscription dibatalkan')
@@ -49,7 +49,7 @@ export async function handleCheckoutSessionCompleted({
             fullName: name as string,
             customerId,
             priceId: priceId as string,
-            status: 'Pro'
+            status: 'aktif'
         })
 
         await createPayment({

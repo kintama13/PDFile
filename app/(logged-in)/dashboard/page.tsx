@@ -3,6 +3,7 @@ import EmptySummaryState from "@/components/summaries/empty-summary-state";
 import SummaryCard from "@/components/summaries/summary-card";
 import { Button } from "@/components/ui/button";
 import { getSummaries } from "@/lib/summaries";
+import { hasReachedUploadLimit } from "@/lib/user";
 import { currentUser } from "@clerk/nextjs/server";
 import { ArrowRight, Plus } from "lucide-react";
 import Link from "next/link";
@@ -15,7 +16,7 @@ export default async function DashboardPage() {
         return redirect('/sign-in')
     }
 
-    const uploadLimit = 3
+    const {hasReachedLimit, uploadLimit} = await hasReachedUploadLimit(userId)
     const summaries = await getSummaries(userId)
     return(
         <main className="min-h-screen">
@@ -33,32 +34,35 @@ export default async function DashboardPage() {
                                 Ubah file PDF mu menjadi singkat, padat, dan jelas
                             </p>
                         </div>
-                        <Button variant={'link'} className="
-                        bg-linear-to-r from-rose-500 to-rose-700 hover:from-rose-600 hover:to-rose-800
-                        hover:scale-105 transition-all duration-300 group hover:no-underline"
-                        >
-                            <Link href={"/upload"} className="flex items-center text-white">
-                                <Plus className="w-5 h-5 mr-2"/>
-                                Rangkuman Baru
-                            </Link>
-                        </Button>
+                        {!hasReachedLimit && (
+                            <Button variant={'link'} className="
+                            bg-linear-to-r from-rose-500 to-rose-700 hover:from-rose-600 hover:to-rose-800
+                            hover:scale-105 transition-all duration-300 group hover:no-underline"
+                            >
+                                <Link href={"/upload"} className="flex items-center text-white">
+                                    <Plus className="w-5 h-5 mr-2"/>
+                                    Rangkuman Baru
+                                </Link>
+                            </Button>
+                        )}
                     </div>
-                    <div className="mb-6">
-                        <div className="bg-rose-50 border border-rose-200 
-                        rounded-lg p-4 text-rose-800">
-                            <p className="text-sm">
-                                Maksimal {uploadLimit} Upload/hari untuk akun gratis.{" "}
-                                <Link href={'/#pricing'} className="
-                                text-rose-800 underline font-medium underline-offset-4
-                                inline-block">
-                                    Klik disini untuk upgrade ke Pro{" "}
-                                    <ArrowRight className="w-4 h-4 inline-block"/>
-                                </Link>{" "}
-                                untuk upload tanpa batas
-                            </p>
+                    {hasReachedLimit && (
+                        <div className="mb-6">
+                            <div className="bg-rose-50 border border-rose-200 
+                            rounded-lg p-4 text-rose-800">
+                                <p className="text-sm">
+                                    Maksimal {uploadLimit} Upload untuk akun Dasar.{" "}
+                                    <Link href={'/#pricing'} className="
+                                    text-rose-800 underline font-medium underline-offset-4
+                                    inline-block">
+                                        Klik disini untuk upgrade ke Pro{" "}
+                                        <ArrowRight className="w-4 h-4 inline-block"/>
+                                    </Link>{" "}
+                                    untuk upload tanpa batas
+                                </p>
+                            </div>
                         </div>
-                    </div>
-
+                    )}
                     {summaries.length === 0 ? (<EmptySummaryState/>):(
                         <div className="grid grid-cols-1 gap-4 sm:gap-6 md:grid-cols-2 lg:grid-cols-3 sm:px-0">
                             {summaries.map((summary, index) => (

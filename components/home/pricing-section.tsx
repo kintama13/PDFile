@@ -1,4 +1,5 @@
 import { cn } from "@/lib/utils";
+import { pricingPlans } from "@/utils/constants";
 import { BadgeCheck, CornerDownRight } from "lucide-react";
 import Link from "next/link";
 
@@ -11,29 +12,6 @@ type PriceType = {
   paymentLink?: string;
   priceId?: string;
 };
-
-const plans: PriceType[] = [
-  {
-    name: "Dasar",
-    description: "Cocok untuk penggunaan ringan dan kebutuhan dasar.",
-    items: ["Unggah hingga 2 file PDF per hari", "Bantuan melalui email","Dapat Menyimpan Maksimal 2 File"],
-    id: "dasar",
-  },
-  {
-    name: "Pro",
-    price: 50,
-    description: "Dirancang untuk profesional dan tim yang memerlukan fitur penuh.",
-    items: [
-      "Unggah tanpa batas jumlah file",
-      "Prioritas pemrosesan server",
-      "Dapat Menyimpan Hasil Rangkuman Seabanyak-banyaknya",
-      "Dukungan pelanggan premium",
-    ],
-    id: "pro",
-    paymentLink: "",
-    priceId: "",
-  },
-];
 
 const PricingCard = ({
   name,
@@ -76,15 +54,40 @@ const PricingCard = ({
                 ))}
             </div>
 
-            {id === "pro" && (
+            {id === "dasar" && (
                 <div className="space-y-2 flex justify-center w-full">
                     {paymentLink ? (
-                    <Link href={paymentLink}>
-                        Beli Sekarang
+                    <Link href={paymentLink}
+                        className="w-full rounded-full flex items-center
+                        justify-center gap-2 bg-gradient-to-r from-rose-800
+                        to-rose-500 hover:from-rose-500 hover:to-rose-800
+                        text-white border-2 py-2">
+                        <CornerDownRight size={18} />Beli Sekarang
                     </Link>
                     ) : (
                     <span className="w-full rounded-full flex items-center
-                        justify-center gap-2 bg-linear-to-r from-rose-800
+                        justify-center gap-2 bg-gradient-to-r from-rose-800
+                        to-rose-500 hover:from-rose-500 hover:to-rose-800
+                        text-white border-2 py-2">
+                            <CornerDownRight size={18} />Beli Sekarang 
+                    </span>
+                    )}
+                </div>
+            )}
+
+            {id === "pro" && (
+                <div className="space-y-2 flex justify-center w-full">
+                    {paymentLink ? (
+                    <Link href={paymentLink}
+                        className="w-full rounded-full flex items-center
+                        justify-center gap-2 bg-gradient-to-r from-rose-800
+                        to-rose-500 hover:from-rose-500 hover:to-rose-800
+                        text-white border-2 py-2">
+                        <CornerDownRight size={18} />Beli Sekarang
+                    </Link>
+                    ) : (
+                    <span className="w-full rounded-full flex items-center
+                        justify-center gap-2 bg-gradient-to-r from-rose-800
                         to-rose-500 hover:from-rose-500 hover:to-rose-800
                         text-white border-2 py-2">
                             <CornerDownRight size={18} />Beli Sekarang 
@@ -116,7 +119,7 @@ export default function PricingSection() {
           className="relative flex justify-center flex-col
             lg:flex-row items-center lg:items-stretch gap-8"
         >
-          {plans.map((plan) => (
+          {pricingPlans.map((plan) => (
             <PricingCard key={plan.id} {...plan} />
           ))}
         </div>
