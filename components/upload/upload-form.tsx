@@ -37,8 +37,8 @@ export default function UploadForm() {
             console.error('error terjadi saat upload', err)
             toast.error('Terjadi Kesalahan Saat Upload File')
         },
-        onUploadBegin:(fileName) => {
-            console.log('upload dimulai untuk file', fileName)
+        onUploadBegin:(data) => {
+            console.log('upload dimulai untuk file', data)
         }
     })
 
@@ -53,8 +53,6 @@ export default function UploadForm() {
             // validasi file
             const validatedFields = schema.safeParse({file})
 
-            console.log(validatedFields)
-
             if (!validatedFields.success) {
                 toast.error(validatedFields.error.flatten().fieldErrors.file?.[0] ?? 'File invalid')
                 setIsLoading(false)
@@ -65,8 +63,8 @@ export default function UploadForm() {
             
             // upload file ke uploadthing
 
-            const resp = await startUpload([file])
-            if (!resp) {
+            const uploadResponse = await startUpload([file])
+            if (!uploadResponse) {
                 toast.error('Telah terjadi Kesalahan, tolong ganti file mu')
                 setIsLoading(false)
                 return
@@ -74,8 +72,13 @@ export default function UploadForm() {
 
             toast.info("PDF diproses....")
 
+            const uploadFileUrl = uploadResponse[0].serverData.fileUrl
+
             // parse pdf menggunakan lang chain
-            const result = await generatePdfSummary([resp[0]])
+            const result = await generatePdfSummary({
+                fileUrl: uploadFileUrl,
+                fileName: file.name
+            })
             
             const {data = null, message = null} = result || {}
 
@@ -84,7 +87,7 @@ export default function UploadForm() {
                 toast.info("Menyimpan PDF....")
                 if(data.summary){
                     storeResult = await storePdfSummaryAction({
-                        fileUrl: resp[0].serverData.file.url,
+                        fileUrl: uploadFileUrl,
                         summary: data.summary,
                         title: data.title,
                         fileName: file.name
