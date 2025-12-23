@@ -37,8 +37,8 @@ export default function UploadForm() {
             console.error('error terjadi saat upload', err)
             toast.error('Terjadi Kesalahan Saat Upload File')
         },
-        onUploadBegin:({file}) => {
-            console.log('upload dimulai untuk file', file)
+        onUploadBegin:(fileName) => {
+            console.log('upload dimulai untuk file', fileName)
         }
     })
 
@@ -75,7 +75,7 @@ export default function UploadForm() {
             toast.info("PDF diproses....")
 
             // parse pdf menggunakan lang chain
-            const result = await generatePdfSummary(resp)
+            const result = await generatePdfSummary([resp[0]])
             
             const {data = null, message = null} = result || {}
 
